@@ -1,6 +1,6 @@
 import { Application, Context, Router, ServerSentEvent, ServerSentEventTarget } from "https://deno.land/x/oak/mod.ts";
 import { oakCors } from "https://deno.land/x/cors/mod.ts";
-import database from './db.ts';
+// import database from './db.ts';
 
 const app = new Application();
 
@@ -12,36 +12,24 @@ router.get("/sse", (ctx: Context) => {
   const target = ctx.sendEvents();
   listeners.push(target);
   console.log("Added ", target);
-  target.dispatchMessage({hello: 'world'});
   listeners = listeners.filter((value) => !value.closed);
   console.log("listeners:", listeners);
 });
 
-// router.get("/barf", async (ctx) => {
+router.get("/barf", async (ctx) => {
 
-//   const {rows: result} = await database.queryArray`SELECT id FROM countries ORDER BY id ASC;`;
-
-//   console.log("SSEing to ", listeners, "data", result);
-//   listeners.map((target) => {
-//     const event = new ServerSentEvent("barf", { henk: 'something funny' });
-//     target.dispatchMessage(event);
-//   });
-
-//   ctx.response.body = "Hello world!" + result;
-// });
-
-router.get("/barf2", (ctx) => {
-
-  console.log("SSEing to ", listeners);
-  listeners.map((target) => {
-    const event = new ServerSentEvent("barf", {data:{ henk: 'something funny' }});
+  await listeners.map((target) => {
+    const event = new ServerSentEvent("barf", JSON.stringify({ henk: 'something funny' }));
+    console.log(`Sending ${event.type} ${event.data} to ${target}`);
     target.dispatchEvent(event);
   });
 
-  ctx.response.body = "Hello world2!";
+  ctx.response.body = "Hello world!";
 });
 
-app.use(oakCors());
+app.use(oakCors({
+ "origin": "*"
+}));
 app.use(router.routes());
 // Send static content
 app.use(async (context) => {
