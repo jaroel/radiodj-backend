@@ -1,6 +1,6 @@
 import { Application, Context, Router, ServerSentEvent, ServerSentEventTarget } from "https://deno.land/x/oak/mod.ts";
 import { oakCors } from "https://deno.land/x/cors/mod.ts";
-// import database from './db.ts';
+import database from './db.ts';
 
 const app = new Application();
 
@@ -18,9 +18,13 @@ router.get("/sse", (ctx: Context) => {
 
 router.get("/barf", async (ctx) => {
 
+  const results = await database.queryObject("select name from countries");
+
   await listeners.map((target) => {
-    const event = new ServerSentEvent("barf", JSON.stringify({ henk: 'something funny' }));
-    console.log(`Sending ${event.type} ${event.data} to ${target}`);
+    const event = new ServerSentEvent("barf", JSON.stringify({
+      henk: 'something funny',
+      countries: results.rows,
+    }));
     target.dispatchEvent(event);
   });
 
